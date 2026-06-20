@@ -9,10 +9,14 @@ The data source is injected here, so swapping mock for real Polymarket data
 """
 from __future__ import annotations
 
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .data.base import MarketDataSource
 from .data.mock_polymarket import MockPolymarketDataSource
+from .data.polymarket import PolymarketDataSource
 from .engine.backtester import run_backtest
 from .models import (
     BacktestRequest,
@@ -32,13 +36,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Swap point #1: replace with PolymarketDataSource() to go live on real data.
-DATA_SOURCE = MockPolymarketDataSource()
+
+def _build_data_source() -> MarketDataSource:
+    """Swap point #1.
+
+    DATA_SOURCE=polymarket uses the real Polymarket API, falling back to mock data
+    if Polymarket is unreachable (e.g. egress not allowlisted). Anything else (the
+    default) uses mock data. POLYMARKET_LIMIT tunes how many markets to pull.
+    """
+    if os.getenv("DATA_SOURCE", "mock").lower() == "polymarket":
+        return PolymarketDataSource(
+            limit=int(os.getenv("POLYMARKET_LIMIT", "20")),
+            fallback=MockPolymarketDataSource(),
+        )
+    return MockPolymarketDataSource()
+
+
+DATA_SOURCE = _build_data_source()
 
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok", "data_source": DATA_SOURCE.__class__.__name__}
+    mode = getattr(DATA_SOURCE, "last_mode", None)
+    return {
+        "status": "ok",
+        "data_source": DATA_SOURCE.__class__.__name__,
+        "mode": mode,  # live / fallback / error / uninitialized (polymarket only)
+    }
 
 
 @app.post("/strategy/generate", response_model=GenerateResponse)

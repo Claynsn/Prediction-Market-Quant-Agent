@@ -59,13 +59,29 @@ npm run dev
 1. 在 Supabase 项目里执行 `supabase/schema.sql`
 2. 在 `web/.env.local` 填入 `SUPABASE_URL` 与 `SUPABASE_SERVICE_ROLE_KEY`
 
-## 预留的扩展点（swap points）
+## 切换真实 Polymarket 数据（swap point #1，已实现）
 
-1. **真实数据**：实现 `PolymarketDataSource(MarketDataSource)`（`backtest/app/data/base.py`），
-   引擎、策略、API 都不用动。
-2. **AI 生成策略**：把 `backtest/app/nlp/parser.py` 的规则解析换成 Claude 调用，
+回测服务默认用 mock 数据。要切到真实 Polymarket：
+
+```bash
+# 在启动 uvicorn 前设置环境变量
+export DATA_SOURCE=polymarket
+export POLYMARKET_LIMIT=20        # 可选，拉取的市场数量
+uvicorn app.main:app --reload --port 8000
+```
+
+- 数据来自 Polymarket 公开接口：Gamma API（市场元数据/结算）+ CLOB API（YES 历史价格）。
+- 实现见 `backtest/app/data/polymarket.py`，产出与 mock 完全相同的 `Market`/`PricePoint`，
+  引擎、策略、API 都不用动。
+- **网络要求**：需在环境的出站白名单中放行 `gamma-api.polymarket.com` 与
+  `clob.polymarket.com`。若不可达，会**自动回退到 mock**，并在 `GET /health` 的
+  `mode` 字段标记 `fallback`（`live` = 真实数据，`error` = 不可达且无回退）。
+
+## 其他扩展点（swap points）
+
+1. **AI 生成策略**：把 `backtest/app/nlp/parser.py` 的规则解析换成 Claude 调用，
    返回结构（`StrategyConfig` + `assumptions` + `missing`）不变，`missing` 可驱动追问缺失参数。
-3. **实盘执行**：`PaperTradingPanel` 是 stub，未来在同一接口后接 live executor，
+2. **实盘执行**：`PaperTradingPanel` 是 stub，未来在同一接口后接 live executor，
    并加上线前风控确认流程（仓位上限、日亏损熔断、二次确认）。
 
 ## 第一版策略
