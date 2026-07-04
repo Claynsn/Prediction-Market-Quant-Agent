@@ -34,7 +34,21 @@ http://localhost:3000/snapshot.html 访问。
 
 ## 本地启动
 
-需要 Node 18+ 与 Python 3.11+。三个服务分别启动。
+需要 Node 18+ 与 Python 3.11+。
+
+### 一键启动（推荐）
+
+```bash
+bash scripts/dev.sh
+```
+
+首次运行会自动创建 venv、装依赖、生成 .env.local，然后依次拉起
+backtest(:8000)、pm-agent(:8001)、web(:3000)。就绪后打开
+http://localhost:3000 。Ctrl-C 一次性停止全部服务。
+
+### 手动分别启动
+
+三个服务分别启动：
 
 ### 0. pm-agent 服务（端口 8001，新架构核心）
 
