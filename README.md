@@ -28,9 +28,20 @@ supabase/   schema.sql：ideas / strategies / backtests 三张表
 
 ## 本地启动
 
-需要 Node 18+ 与 Python 3.11+。两个服务分别启动。
+需要 Node 18+ 与 Python 3.11+。三个服务分别启动。
 
-### 1. 回测服务（端口 8000）
+### 0. pm-agent 服务（端口 8001，新架构核心）
+
+```bash
+cd pm-agent
+# 复用 backtest 的 venv 即可（依赖相同）
+source ../backtest/.venv/bin/activate
+uvicorn pmagent.api:app --reload --port 8001
+```
+
+健康检查：`curl localhost:8001/health`；系统状态：`curl localhost:8001/status`
+
+### 1. 回测服务（端口 8000，旧通用阈值引擎）
 
 ```bash
 cd backtest
