@@ -1,0 +1,37 @@
+# 把仪表盘快照发布到 GitHub Pages（仓库需为 Public，或有付费计划）。
+# 一次性启用：仓库 Settings → Pages → Source 选 "GitHub Actions"。
+# 之后每次 push 本工作流自动把 web/public/snapshot.html 发布为站点首页。
+name: publish-dashboard
+
+on:
+  push:
+    branches: [main, "claude/clay-quant-os-setup-psq4ii"]
+    paths: ["web/public/snapshot.html", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage site
+        run: |
+          mkdir -p dist
+          cp web/public/snapshot.html dist/index.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deployment
+        uses: actions/deploy-pages@v4
