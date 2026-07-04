@@ -1,0 +1,21 @@
+# Node / Next.js
+node_modules/
+web/.next/
+web/out/
+web/next-env.d.ts
+npm-debug.log*
+
+# Python
+backtest/.venv/
+__pycache__/
+*.pyc
+
+# Env
+.env
+.env.local
+web/.env.local
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
