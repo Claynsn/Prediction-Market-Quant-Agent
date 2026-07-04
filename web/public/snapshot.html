@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clay Quant OS</title>
+<style>
+  :root {
+    --bg: #f2f5f7; --panel: #ffffff; --panel2: #f7fafb;
+    --border: #d8e0e8; --ink: #1a2634; --muted: #5d6b7c;
+    --accent: #0d9488; --accent-soft: rgba(13,148,136,.10);
+    --pos: #0e8a5f; --neg: #c03d3d; --warn: #8a6100; --warn-soft: rgba(138,97,0,.08);
+    --chart-fill: rgba(13,148,136,.14);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0f17; --panel: #121826; --panel2: #0e1420;
+      --border: #223047; --ink: #dde6f0; --muted: #7c8a9e;
+      --accent: #5eead4; --accent-soft: rgba(94,234,212,.12);
+      --pos: #34d399; --neg: #f87171; --warn: #f0c052; --warn-soft: rgba(240,192,82,.08);
+      --chart-fill: rgba(94,234,212,.13);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f2f5f7; --panel: #ffffff; --panel2: #f7fafb;
+    --border: #d8e0e8; --ink: #1a2634; --muted: #5d6b7c;
+    --accent: #0d9488; --accent-soft: rgba(13,148,136,.10);
+    --pos: #0e8a5f; --neg: #c03d3d; --warn: #8a6100; --warn-soft: rgba(138,97,0,.08);
+    --chart-fill: rgba(13,148,136,.14);
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b0f17; --panel: #121826; --panel2: #0e1420;
+    --border: #223047; --ink: #dde6f0; --muted: #7c8a9e;
+    --accent: #5eead4; --accent-soft: rgba(94,234,212,.12);
+    --pos: #34d399; --neg: #f87171; --warn: #f0c052; --warn-soft: rgba(240,192,82,.08);
+    --chart-fill: rgba(94,234,212,.13);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-size: 14px; line-height: 1.6;
+  }
+  .mono, .num {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 28px 20px 56px; }
+
+  header.top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  .wordmark { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+  .wordmark .tick { color: var(--accent); }
+  .sub { color: var(--muted); font-size: 13px; margin: 2px 0 18px; }
+  .snapshot {
+    display: flex; gap: 10px; align-items: flex-start;
+    border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    background: var(--panel2); border-radius: 10px; padding: 10px 14px;
+    font-size: 12.5px; color: var(--muted); margin-bottom: 20px;
+  }
+  .snapshot b { color: var(--ink); font-weight: 600; }
+
+  nav.tabs { display: flex; gap: 4px; border: 1px solid var(--border); background: var(--panel); border-radius: 12px; padding: 4px; margin-bottom: 20px; }
+  nav.tabs button {
+    flex: 1; border: 0; background: transparent; color: var(--muted);
+    font: inherit; font-weight: 600; padding: 9px 12px; border-radius: 9px; cursor: pointer;
+  }
+  nav.tabs button[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); }
+  nav.tabs button:focus-visible, .chip:focus-visible, .run:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+
+  .card { border: 1px solid var(--border); background: var(--panel); border-radius: 14px; padding: 18px 20px; }
+  .stack { display: flex; flex-direction: column; gap: 16px; }
+  .card h2 { margin: 0 0 6px; font-size: 15px; }
+  .label { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+  textarea {
+    width: 100%; resize: vertical; min-height: 68px;
+    border: 1px solid var(--border); border-radius: 10px; background: var(--panel2);
+    color: var(--ink); font: inherit; padding: 10px 12px;
+  }
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .chip {
+    border: 1px solid var(--border); background: transparent; color: var(--muted);
+    border-radius: 999px; padding: 4px 12px; font-size: 12px; cursor: pointer;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .run {
+    margin-top: 14px; width: 100%; border: 0; border-radius: 10px; cursor: pointer;
+    background: var(--accent); color: var(--bg); font: inherit; font-weight: 700; padding: 11px;
+  }
+  .run:hover { filter: brightness(1.06); }
+
+  .banner {
+    border: 1px solid; border-radius: 10px; padding: 10px 14px; font-size: 12.5px; line-height: 1.65;
+  }
+  .banner.warn { border-color: var(--warn); background: var(--warn-soft); color: var(--warn); }
+  .banner.info { border-color: var(--border); background: var(--panel2); color: var(--muted); }
+
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+  .metric { border: 1px solid var(--border); background: var(--panel2); border-radius: 10px; padding: 10px 12px; }
+  .metric .v { font-size: 19px; font-weight: 700; margin-top: 2px; }
+  .pos { color: var(--pos); } .neg { color: var(--neg); }
+
+  .sens { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sens span { border: 1px solid var(--border); border-radius: 999px; padding: 3px 11px; font-size: 12px; color: var(--muted); }
+  .sens span.base { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+  .chartbox { position: relative; }
+  .tooltip {
+    position: absolute; pointer-events: none; display: none;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 10px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.18); white-space: nowrap; z-index: 5;
+  }
+
+  .tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  th { text-align: left; font-weight: 600; color: var(--muted); background: var(--panel2); padding: 8px 12px; white-space: nowrap; }
+  td { padding: 7px 12px; border-top: 1px solid var(--border); white-space: nowrap; }
+  td.wrapcell { white-space: normal; min-width: 180px; }
+  .pill { display: inline-block; border-radius: 6px; padding: 1px 7px; font-size: 10.5px; font-weight: 600; }
+  .pill.win { background: color-mix(in srgb, var(--pos) 14%, transparent); color: var(--pos); }
+  .pill.loss { background: color-mix(in srgb, var(--neg) 14%, transparent); color: var(--neg); }
+  .pill.low { background: var(--warn-soft); color: var(--warn); }
+  .pill.state { background: var(--accent-soft); color: var(--accent); }
+  .pill.blocked { background: color-mix(in srgb, var(--neg) 14%, transparent); color: var(--neg); }
+  .pill.pending { background: var(--warn-soft); color: var(--warn); }
+  .pill.stub { background: var(--panel2); color: var(--muted); border: 1px solid var(--border); }
+
+  ul.tight { margin: 6px 0 0; padding-left: 18px; color: var(--muted); font-size: 12.5px; }
+  ul.tight li { margin-bottom: 4px; }
+
+  .srcrow { display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--border); background: var(--panel2); border-radius: 10px; padding: 10px 12px; }
+  .srcrow .pill { margin-top: 2px; min-width: 56px; text-align: center; }
+  .srcrow .d { color: var(--muted); font-size: 12px; }
+
+  .deploy button { width: 100%; border: 1px solid var(--border); background: var(--panel2); color: var(--muted); border-radius: 10px; padding: 11px; font: inherit; font-weight: 700; cursor: not-allowed; }
+  footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 36px; }
+  .hidden { display: none; }
+  @media (prefers-reduced-motion: no-preference) {
+    .card { transition: border-color .15s; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="wordmark">Clay<span class="tick">▮</span>Quant OS</div>
+    <div class="label">个人预测市场量化系统</div>
+  </header>
+  <p class="sub">想法 → 回测 → （风控确认后）实盘</p>
+
+  <div class="snapshot">
+    <span aria-hidden="true">◉</span>
+    <div><b>这是仪表盘的自包含快照</b>（数据与回测引擎内嵌，2026-07-04 生成），交互与真实应用一致。
+    完整应用（含通用阈值引擎、Supabase 持久化）在仓库本地运行：pm-agent :8001 · backtest :8000 · web :3000，见 README。</div>
+  </div>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="bt">策略回测</button>
+    <button role="tab" aria-selected="false" data-tab="data">数据</button>
+    <button role="tab" aria-selected="false" data-tab="sys">系统</button>
+  </nav>
+
+  <!-- ======================= 回测 ======================= -->
+  <section id="tab-bt" class="stack">
+    <div class="card">
+      <div class="label">用一句话描述你的策略想法</div>
+      <textarea id="idea" placeholder="例如：2026世界杯开赛前1分钟每场买入胜率高的一方获胜，每笔10刀"></textarea>
+      <div class="chips">
+        <button class="chip" data-idea="2026世界杯开赛前1分钟每场买入胜率高的一方获胜，每笔10刀">世界杯 · 买热门 · $10/笔</button>
+        <button class="chip" data-idea="2026世界杯开赛前1分钟每场买入胜率高的一方获胜，每笔25刀">同上 · $25/笔</button>
+        <button class="chip" data-idea="买入概率超过 70% 的 YES，持有到结算，单笔 5%">通用阈值策略（需本地服务）</button>
+      </div>
+      <button class="run" id="run">生成策略并回测</button>
+    </div>
+    <div id="report" class="stack"></div>
+  </section>
+
+  <!-- ======================= 数据 ======================= -->
+  <section id="tab-data" class="stack hidden">
+    <div class="card">
+      <h2 id="ds-title"></h2>
+      <div class="stack" style="gap:8px; margin-top:8px;">
+        <div class="banner info"><b style="color:var(--pos)">赛果来源：</b><span id="ds-result"></span></div>
+        <div class="banner warn"><b>价格来源：</b><span id="ds-price"></span></div>
+        <div style="color:var(--muted); font-size:12.5px;">市场口径：<span id="ds-conv"></span></div>
+      </div>
+    </div>
+    <div class="tablewrap"><table id="ds-table">
+      <thead><tr><th>开赛 (UTC)</th><th>比赛</th><th>热门</th><th>估算价</th><th>比分</th><th>晋级</th><th>置信</th><th>备注</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </section>
+
+  <!-- ======================= 系统 ======================= -->
+  <section id="tab-sys" class="stack hidden">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <h2 style="margin:0">pm-agent 0.1.0</h2>
+        <span class="pill state">端到端演示切片 · Phase 0 已完成</span>
+      </div>
+      <div class="label" style="margin:14px 0 8px;">数据源</div>
+      <div class="stack" style="gap:8px;" id="sources"></div>
+    </div>
+    <div class="card" style="border-color: color-mix(in srgb, var(--neg) 30%, var(--border));">
+      <div class="label" style="color:var(--neg)">实盘风控红线（不可协商，OMS 内强制）</div>
+      <ul class="tight" id="redlines"></ul>
+    </div>
+    <div class="card" style="color:var(--muted); font-size:12.5px;">
+      能力矩阵与偏差记录见仓库 <span class="mono">pm-agent/docs/venue-capabilities.md</span> 与 <span class="mono">pm-agent/docs/deviations.md</span>。
+    </div>
+  </section>
+
+  <footer>Clay Quant OS · pm-agent 架构 · 仅供研究，非投资建议</footer>
+</div>
+
+<script>
+/* ---------- 内嵌数据集（与 pm-agent/pmagent/data/worldcup2026.json 同源） ---------- */
+const DATASET = {
+  dataset: "2026 FIFA 世界杯 · 32 强淘汰赛（完整轮次 16 场，2026-06-28 → 07-03）",
+  result_provenance: "赛果经多源新闻核验（Yahoo Sports、Al Jazeera、olympics.com 等），比分与晋级方为真实数据。",
+  price_provenance: "估算值。真实开赛前 1 分钟的市场价无法回补（Polymarket 已结算市场历史仅 ≥12 小时粒度），favorite_price_est 为按典型收盘赔率估算的开赛前 'to advance' 共识概率，非记录的市场成交价。",
+  market_convention: "二元 'Team to advance' 市场（含加时与点球）。热门 = 开赛前价格更高一方。",
+  matches: [
+    { id:"r32-01", ko:"06-28 18:00", home:"South Africa", away:"Canada", fav:"Canada", p:0.74, adv:"Canada", score:"0-1", conf:"medium", notes:"东道主对非洲区第三档" },
+    { id:"r32-02", ko:"06-29 00:00", home:"Brazil", away:"Japan", fav:"Brazil", p:0.78, adv:"Brazil", score:"2-1", conf:"medium", notes:"" },
+    { id:"r32-03", ko:"06-29 18:00", home:"Côte d'Ivoire", away:"Norway", fav:"Norway", p:0.56, adv:"Norway", score:"1-2", conf:"low", notes:"接近五五开，热门认定不稳" },
+    { id:"r32-04", ko:"06-29 22:00", home:"France", away:"Sweden", fav:"France", p:0.88, adv:"France", score:"3-0", conf:"high", notes:"" },
+    { id:"r32-05", ko:"06-30 00:00", home:"Germany", away:"Paraguay", fav:"Germany", p:0.84, adv:"Paraguay", score:"1-1 (4-3 点球)", conf:"high", notes:"爆冷：点球淘汰。德国小组赛已负厄瓜多尔" },
+    { id:"r32-06", ko:"06-30 18:00", home:"Netherlands", away:"Morocco", fav:"Netherlands", p:0.62, adv:"Morocco", score:"1-1 (3-2 点球)", conf:"medium", notes:"爆冷：摩洛哥 2022 四强底子" },
+    { id:"r32-07", ko:"06-30 22:00", home:"Mexico", away:"Ecuador", fav:"Mexico", p:0.58, adv:"Mexico", score:"2-0", conf:"low", notes:"厄瓜多尔小组赛赢过德国，盘口可能更接近" },
+    { id:"r32-08", ko:"07-01 00:00", home:"England", away:"DR Congo", fav:"England", p:0.90, adv:"England", score:"2-1", conf:"high", notes:"" },
+    { id:"r32-09", ko:"07-01 18:00", home:"Belgium", away:"Senegal", fav:"Belgium", p:0.64, adv:"Belgium", score:"3-2 (加时)", conf:"medium", notes:"加时险胜" },
+    { id:"r32-10", ko:"07-01 22:00", home:"USA", away:"Bosnia and Herzegovina", fav:"USA", p:0.72, adv:"USA", score:"2-0", conf:"medium", notes:"东道主" },
+    { id:"r32-11", ko:"07-02 18:00", home:"Spain", away:"Austria", fav:"Spain", p:0.82, adv:"Spain", score:"3-0", conf:"high", notes:"" },
+    { id:"r32-12", ko:"07-02 20:00", home:"Portugal", away:"Croatia", fav:"Portugal", p:0.60, adv:"Portugal", score:"2-1", conf:"medium", notes:"强强对话" },
+    { id:"r32-13", ko:"07-02 23:00", home:"Switzerland", away:"Algeria", fav:"Switzerland", p:0.68, adv:"Switzerland", score:"2-0", conf:"medium", notes:"" },
+    { id:"r32-14", ko:"07-03 17:00", home:"Australia", away:"Egypt", fav:"Egypt", p:0.52, adv:"Egypt", score:"1-1 (4-2 点球)", conf:"low", notes:"几乎五五开：若真实盘口以澳大利亚为热门，此单为亏" },
+    { id:"r32-15", ko:"07-03 20:00", home:"Argentina", away:"Cabo Verde", fav:"Argentina", p:0.95, adv:"Argentina", score:"3-2 (加时)", conf:"high", notes:"卫冕冠军对最大黑马，加时才赢" },
+    { id:"r32-16", ko:"07-03 23:00", home:"Colombia", away:"Ghana", fav:"Colombia", p:0.70, adv:"Colombia", score:"1-0", conf:"medium", notes:"" },
+  ],
+};
+
+const SOURCES = [
+  { name:"WorldCup2026 R32 数据集", state:"loaded", d:"16 场；赛果=真实核验，入场价=估算（L0-DEMO）" },
+  { name:"Polymarket (Gamma/CLOB/WS)", state:"blocked", d:"egress 未放行；放行后接真实数据（deviations.md D-1）" },
+  { name:"predict.fun", state:"pending", d:"等 mainnet API key（Discord 工单）" },
+  { name:"Kalshi", state:"pending", d:"行情免鉴权，egress 放行即接" },
+  { name:"The Odds API", state:"pending", d:"免费档 500 credits/月，预算待拍板" },
+  { name:"X / 社交", state:"stub", d:"接口 + 本地 jsonl 回放（免费档已取消）" },
+];
+const REDLINES = [
+  "默认 DRY_RUN；实盘需显式确认（一键 = 一次风险摘要确认页）",
+  "风险闸门：单笔 ≤$5、总敞口 ≤$20（live_micro 起步值，验证后可调）",
+  "每分钟下单数上限；kill switch（halt 文件即全体撤单停机）",
+  "代币限额 approve；私钥只进 .env；不可逆操作前确认",
+];
+
+/* ---------- Tab 切换 ---------- */
+const tabs = { bt: document.getElementById("tab-bt"), data: document.getElementById("tab-data"), sys: document.getElementById("tab-sys") };
+document.querySelectorAll("nav.tabs button").forEach((b) => {
+  b.addEventListener("click", () => {
+    document.querySelectorAll("nav.tabs button").forEach((x) => x.setAttribute("aria-selected", "false"));
+    b.setAttribute("aria-selected", "true");
+    Object.entries(tabs).forEach(([k, el]) => el.classList.toggle("hidden", k !== b.dataset.tab));
+  });
+});
+
+/* ---------- NL 解析（与 pmagent/nl/parser.py 同逻辑） ---------- */
+function parseIdea(text) {
+  const isWC = /世界杯|world\s*cup/i.test(text) && /胜率高|热门|favorite|赢面/i.test(text);
+  if (!isWC) return { kind: "legacy" };
+  let stake = 10, minutes = 1;
+  const assumptions = [];
+  const ms = text.match(/(?:每笔|单笔|每场)[^\d]{0,6}(\d+(?:\.\d+)?)/);
+  if (ms) stake = parseFloat(ms[1]); else assumptions.push("未指定每笔金额，默认 $10");
+  const mm = text.match(/前\s*(\d+)\s*分钟|(\d+)\s*分钟前/);
+  if (mm) minutes = parseInt(mm[1] || mm[2]); else assumptions.push("未指定入场时点，默认开赛前 1 分钟");
+  return { kind: "wc_favorite", stake, minutes, assumptions };
+}
+
+/* ---------- 回测引擎（与 pmagent/engine/favorite.py 同逻辑） ---------- */
+const clamp = (p) => Math.max(0.02, Math.min(0.99, p));
+function runOnce(stake, shift) {
+  let pnl = 0, staked = 0;
+  for (const m of DATASET.matches) {
+    const entry = clamp(m.p + shift);
+    pnl += (m.adv === m.fav ? stake / entry : 0) - stake;
+    staked += stake;
+  }
+  return pnl / staked;
+}
+function backtest(stake) {
+  const trades = []; let cum = 0, upsets = 0;
+  const curve = [0];
+  for (const m of DATASET.matches) {
+    const entry = clamp(m.p);
+    const won = m.adv === m.fav;
+    const pnl = (won ? stake / entry : 0) - stake;
+    cum += pnl; if (!won) upsets++;
+    trades.push({ ...m, entry, pnl, won });
+    curve.push(cum);
+  }
+  const staked = stake * DATASET.matches.length;
+  const sens = [-0.05, -0.02, 0, 0.02, 0.05].map((s) => ({ s, r: runOnce(stake, s) }));
+  return { trades, curve, staked, pnl: cum, ret: cum / staked, winRate: (trades.length - upsets) / trades.length, upsets, sens };
+}
+
+/* ---------- 渲染 ---------- */
+const fmt$ = (v) => (v >= 0 ? "+" : "−") + "$" + Math.abs(v).toFixed(2);
+const fmtPct = (v) => (v >= 0 ? "+" : "−") + Math.abs(v * 100).toFixed(2) + "%";
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function renderReport(spec, r) {
+  const box = document.getElementById("report");
+  const echoAssume = spec.assumptions.length ? `（自动补全：${spec.assumptions.join("；")}）` : "";
+  box.innerHTML = `
+    <div class="card">
+      <span class="pill state">pm-agent</span>
+      <h2 style="display:inline; margin-left:8px;">世界杯：开赛前买热门晋级</h2>
+      <p style="margin:8px 0 0; color:var(--muted); font-size:13px;">
+        我理解你要回测的是：每场比赛开赛前 ${spec.minutes} 分钟，买入市场胜率更高一方的 'to advance' YES，
+        每笔 $${spec.stake}，持有到结算（含加时与点球）。${echoAssume}
+      </p>
+    </div>
+
+    <div class="card stack">
+      <div class="banner warn">
+        <b>数据保真度：L0-DEMO</b> — 赛果真实（多源新闻核验），入场价为估算。仅验证管道，非投资结论。<br>
+        区间：2026-06-28 → 07-03（32 强淘汰赛全部 16 场）·
+        撮合假设：按估算开赛前价全额成交；手续费 0；不叠加滑点（避免估算价上的假精度）。
+      </div>
+
+      <div class="metrics">
+        <div class="metric"><div class="label">总收益率</div><div class="v num ${r.ret >= 0 ? "pos" : "neg"}">${fmtPct(r.ret)}</div></div>
+        <div class="metric"><div class="label">总盈亏</div><div class="v num ${r.pnl >= 0 ? "pos" : "neg"}">${fmt$(r.pnl)}</div></div>
+        <div class="metric"><div class="label">总投入</div><div class="v num">$${r.staked.toFixed(0)}</div></div>
+        <div class="metric"><div class="label">胜率</div><div class="v num">${(r.winRate * 100).toFixed(0)}%</div></div>
+        <div class="metric"><div class="label">场次</div><div class="v num">${r.trades.length}</div></div>
+        <div class="metric"><div class="label">爆冷</div><div class="v num ${r.upsets ? "neg" : ""}">${r.upsets}</div></div>
+      </div>
+
+      <div>
+        <div class="label" style="margin-bottom:8px;">入场价敏感性 — 请把结果读作这个区间</div>
+        <div class="sens">${r.sens.map((x) => `<span class="num ${x.s === 0 ? "base" : ""}">${x.s > 0 ? "+" : ""}${Math.round(x.s * 100)}¢ → ${fmtPct(x.r)}</span>`).join("")}</div>
+      </div>
+
+      <div>
+        <div class="label" style="margin-bottom:8px;">累计盈亏（$，按开赛时间序）</div>
+        <div class="chartbox" id="chartbox"></div>
+      </div>
+
+      <div class="tablewrap"><table>
+        <thead><tr><th>日期</th><th>比赛</th><th>买入</th><th>价格*</th><th>结果</th><th style="text-align:right">盈亏</th></tr></thead>
+        <tbody>${r.trades.map((t) => `
+          <tr>
+            <td class="num" style="color:var(--muted)">${t.ko.slice(0, 5)}</td>
+            <td>${esc(t.home)} vs ${esc(t.away)}${t.conf === "low" ? ' <span class="pill low" title="' + esc(t.notes) + '">低置信</span>' : ""}</td>
+            <td>${esc(t.fav)}</td>
+            <td class="num">${t.entry.toFixed(2)}</td>
+            <td><span class="pill ${t.won ? "win" : "loss"}">${t.won ? "晋级" : "爆冷"}</span></td>
+            <td class="num ${t.won ? "pos" : "neg"}" style="text-align:right">${fmt$(t.pnl)}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table></div>
+      <div style="text-align:right; color:var(--muted); font-size:11px;">* 价格为估算收盘概率，非真实成交价</div>
+
+      <div class="banner info">
+        <b style="color:var(--ink)">重要说明</b>
+        <ul class="tight">
+          <li>入场价为估算收盘概率——总收益率应读作区间（见敏感性），不是精确值。</li>
+          <li>真实 T-1min 价格路径：①付费赔率历史（The Odds API）②自录（Phase 2 起）。Polymarket 已结算市场历史仅 ≥12h 粒度。</li>
+          <li>样本 = 32 强完整 16 场（无挑选偏差），但单轮样本小，胜率估计方差大。</li>
+          <li>低置信热门认定 3 场——若真实盘口热门相反，结果会明显变化。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card deploy">
+      <h2>部署</h2>
+      <p style="margin:4px 0 12px; color:var(--muted); font-size:13px;">
+        实盘部署将经过：风险摘要确认页（策略、限额、当前敞口）→ OMS 风险闸门（单笔 ≤$5、总敞口 ≤$20 起步）→ kill switch 全程可停。
+      </p>
+      <button disabled title="执行层（Phase 3）完成后开放">部署实盘（Phase 3 后开放）</button>
+    </div>`;
+  drawChart(r.curve, r.trades);
+  box.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+}
+
+function renderLegacyNotice() {
+  document.getElementById("report").innerHTML = `
+    <div class="card">
+      <span class="pill stub">旧引擎</span>
+      <h2 style="display:inline; margin-left:8px;">通用阈值策略</h2>
+      <p style="margin:8px 0 0; color:var(--muted); font-size:13px;">
+        这个想法未命中世界杯热门模式，会路由到通用阈值回测引擎（Python 服务，端口 8000）。
+        该引擎需要本地运行完整应用——这份快照只内嵌了世界杯策略引擎。
+        本地启动：<span class="mono">backtest/ uvicorn :8000 · pm-agent/ uvicorn :8001 · web/ npm run dev :3000</span>。
+      </p>
+    </div>`;
+}
+
+/* ---------- 图表（单序列 · 面积线 · 悬停提示） ---------- */
+function drawChart(curve, trades) {
+  const box = document.getElementById("chartbox");
+  const W = 960, H = 240, padL = 46, padR = 14, padT = 14, padB = 22;
+  let min = Math.min(0, ...curve), max = Math.max(0, ...curve);
+  if (min === max) { min -= 1; max += 1; }
+  const span = max - min;
+  min -= span * 0.06; max += span * 0.06;
+  const iw = W - padL - padR, ih = H - padT - padB;
+  const x = (i) => padL + (i / (curve.length - 1)) * iw;
+  const y = (v) => padT + ih - ((v - min) / (max - min)) * ih;
+
+  const pts = curve.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  const area = `${padL},${y(Math.max(min, 0))} ${pts} ${padL + iw},${y(Math.max(min, 0))}`;
+  const gridVals = [min + (max - min) * 0.15, 0, max - (max - min) * 0.15];
+  const last = curve.length - 1;
+
+  box.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%; display:block;" role="img" aria-label="累计盈亏曲线">
+      ${gridVals.map((g) => `
+        <line x1="${padL}" x2="${padL + iw}" y1="${y(g)}" y2="${y(g)}" stroke="var(--border)" stroke-width="1" ${g === 0 ? 'stroke-dasharray="4 4"' : 'opacity="0.5"'}></line>
+        <text x="${padL - 6}" y="${y(g) + 4}" text-anchor="end" fill="var(--muted)" font-size="11" class="num">$${g.toFixed(0)}</text>`).join("")}
+      <polygon points="${area}" fill="var(--chart-fill)"></polygon>
+      <polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"></polyline>
+      <circle cx="${x(last)}" cy="${y(curve[last])}" r="4" fill="var(--accent)" stroke="var(--panel)" stroke-width="2"></circle>
+      <text x="${x(last) - 8}" y="${y(curve[last]) - 10}" text-anchor="end" fill="var(--accent)" font-size="12" font-weight="700" class="num">${fmt$(curve[last])}</text>
+      <circle id="hoverdot" r="4" fill="var(--accent)" stroke="var(--panel)" stroke-width="2" style="display:none"></circle>
+      <rect x="${padL}" y="${padT}" width="${iw}" height="${ih}" fill="transparent" id="hitarea"></rect>
+    </svg>
+    <div class="tooltip num" id="tip"></div>`;
+
+  const svg = box.querySelector("svg"), tip = box.querySelector("#tip"), dot = box.querySelector("#hoverdot");
+  box.querySelector("#hitarea").addEventListener("mousemove", (e) => {
+    const r = svg.getBoundingClientRect();
+    const sx = ((e.clientX - r.left) / r.width) * W;
+    const i = Math.max(0, Math.min(curve.length - 1, Math.round(((sx - padL) / iw) * (curve.length - 1))));
+    dot.style.display = "";
+    dot.setAttribute("cx", x(i)); dot.setAttribute("cy", y(curve[i]));
+    const label = i === 0 ? "起点" : `${trades[i - 1].home} vs ${trades[i - 1].away}`;
+    tip.textContent = `${label} · 累计 ${fmt$(curve[i])}`;
+    tip.style.display = "block";
+    const bx = box.getBoundingClientRect();
+    const tx = ((x(i) / W) * r.width) + 10, ty = ((y(curve[i]) / H) * r.height) - 34;
+    tip.style.left = Math.min(tx, bx.width - tip.offsetWidth - 4) + "px";
+    tip.style.top = Math.max(0, ty) + "px";
+  });
+  box.querySelector("#hitarea").addEventListener("mouseleave", () => { tip.style.display = "none"; dot.style.display = "none"; });
+}
+
+/* ---------- 数据 / 系统 tab 填充 ---------- */
+document.getElementById("ds-title").textContent = DATASET.dataset;
+document.getElementById("ds-result").textContent = DATASET.result_provenance;
+document.getElementById("ds-price").textContent = DATASET.price_provenance;
+document.getElementById("ds-conv").textContent = DATASET.market_convention;
+document.querySelector("#ds-table tbody").innerHTML = DATASET.matches.map((m) => `
+  <tr>
+    <td class="num" style="color:var(--muted)">${m.ko}</td>
+    <td>${esc(m.home)} vs ${esc(m.away)}</td>
+    <td>${esc(m.fav)}</td>
+    <td class="num">${m.p.toFixed(2)}</td>
+    <td class="num">${m.score}</td>
+    <td class="${m.adv === m.fav ? "pos" : "neg"}" style="font-weight:600">${esc(m.adv)}</td>
+    <td><span class="pill ${m.conf === "low" ? "low" : m.conf === "high" ? "win" : "stub"}">${m.conf}</span></td>
+    <td class="wrapcell" style="color:var(--muted)">${esc(m.notes)}</td>
+  </tr>`).join("");
+
+document.getElementById("sources").innerHTML = SOURCES.map((s) => `
+  <div class="srcrow"><span class="pill ${s.state === "loaded" ? "win" : s.state === "blocked" ? "blocked" : s.state === "pending" ? "pending" : "stub"}">${s.state}</span>
+  <div><div style="font-weight:600">${esc(s.name)}</div><div class="d">${esc(s.d)}</div></div></div>`).join("");
+document.getElementById("redlines").innerHTML = REDLINES.map((r) => `<li>${esc(r)}</li>`).join("");
+
+/* ---------- 交互 ---------- */
+document.querySelectorAll(".chip").forEach((c) =>
+  c.addEventListener("click", () => { document.getElementById("idea").value = c.dataset.idea; }));
+document.getElementById("run").addEventListener("click", () => {
+  const text = document.getElementById("idea").value.trim();
+  if (!text) return;
+  const spec = parseIdea(text);
+  if (spec.kind === "wc_favorite") renderReport(spec, backtest(spec.stake));
+  else renderLegacyNotice();
+});
+
+/* 首次加载即演示默认策略 */
+document.getElementById("idea").value = "2026世界杯开赛前1分钟每场买入胜率高的一方获胜，每笔10刀";
+renderReport({ stake: 10, minutes: 1, assumptions: [] }, backtest(10));
+</script>
+
+</body>
+</html>

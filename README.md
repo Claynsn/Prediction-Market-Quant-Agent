@@ -26,6 +26,12 @@ backtest/   Python + FastAPI 回测服务
 supabase/   schema.sql：ideas / strategies / backtests 三张表
 ```
 
+## 快速预览（零依赖）
+
+`web/public/snapshot.html` 是仪表盘的自包含快照（世界杯 R32 数据集与回测引擎内嵌），
+**浏览器直接双击打开即可**，无需启动任何服务。启动 web 服务后也可经
+http://localhost:3000/snapshot.html 访问。
+
 ## 本地启动
 
 需要 Node 18+ 与 Python 3.11+。三个服务分别启动。
