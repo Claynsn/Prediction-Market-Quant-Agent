@@ -4,6 +4,7 @@
 name: publish-dashboard
 
 # Pages 已启用（仓库 Public + Source: GitHub Actions），push 自动发布已恢复。
+# 仓库已更名为 Prediction-Market-Quant-Agent；本次改动同时触发改名后的首次重新部署。
 on:
   push:
     branches: [main]
