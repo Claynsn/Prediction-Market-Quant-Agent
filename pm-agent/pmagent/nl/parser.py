@@ -9,6 +9,7 @@ questions, plus the pre-run echo the prompt §8 requires.
 from __future__ import annotations
 
 import re
+from typing import Optional
 
 from ..models import Fidelity, StrategySpec, WCFavoriteParams
 
@@ -16,7 +17,7 @@ _WC_PATTERN = re.compile(r"世界杯|world\s*cup|wc\s*2026", re.IGNORECASE)
 _FAVORITE_PATTERN = re.compile(r"胜率高|热门|夺冠热门|favorite|更强|赢面大", re.IGNORECASE)
 
 
-def _extract_stake(text: str) -> float | None:
+def _extract_stake(text: str) -> Optional[float]:
     m = re.search(r"(?:每笔|单笔|每场|per\s*bet)[^\d]{0,6}(\d+(?:\.\d+)?)\s*(?:刀|美元|美金|usd[ct]?|u\b|\$)?", text, re.IGNORECASE)
     if m:
         return float(m.group(1))
@@ -26,7 +27,7 @@ def _extract_stake(text: str) -> float | None:
     return None
 
 
-def _extract_entry_minutes(text: str) -> int | None:
+def _extract_entry_minutes(text: str) -> Optional[int]:
     m = re.search(r"(?:开赛|开球|kick\s*off)[^\d]{0,6}前?[^\d]{0,4}(\d+)\s*分钟", text)
     if m:
         return int(m.group(1))

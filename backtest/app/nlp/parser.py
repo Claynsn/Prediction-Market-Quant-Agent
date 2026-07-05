@@ -8,7 +8,7 @@ AI flow can ask follow-up questions to fill the gaps without changing callers.
 from __future__ import annotations
 
 import re
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from ..models import StrategyConfig
 
@@ -21,7 +21,7 @@ def _normalize(raw: str) -> float:
     return val / 100.0 if val > 1 else val
 
 
-def _find_percentage(text: str, keywords: List[str]) -> float | None:
+def _find_percentage(text: str, keywords: List[str]) -> Optional[float]:
     """Find a percentage tied to any of the given keywords.
 
     Forward form "keyword <num>%" is always preferred over the reverse form
@@ -40,14 +40,14 @@ def _find_percentage(text: str, keywords: List[str]) -> float | None:
     return None
 
 
-def _find_first_percentage(text: str) -> float | None:
+def _find_first_percentage(text: str) -> Optional[float]:
     m = re.search(r"(\d{1,3}(?:\.\d+)?)\s*%", text)
     if m:
         return float(m.group(1)) / 100.0
     return None
 
 
-def _find_capital(text: str) -> float | None:
+def _find_capital(text: str) -> Optional[float]:
     m = re.search(r"(\d{3,7})\s*(?:usdc|usd|刀|美元|u\b|块)", text, flags=re.IGNORECASE)
     if m:
         return float(m.group(1))
