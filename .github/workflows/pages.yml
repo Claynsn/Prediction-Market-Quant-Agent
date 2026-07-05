@@ -3,14 +3,11 @@
 # 之后每次 push 本工作流自动把 web/public/snapshot.html 发布为站点首页。
 name: publish-dashboard
 
-# 注意：在启用 Pages（Settings → Pages → Source: GitHub Actions，且仓库为
-# Public 或有付费计划）之前保持纯手动触发，避免每次合并都产生必然失败的检查。
-# 启用 Pages 后，把下面注释的 push 触发恢复即可自动发布：
-# on:
-#   push:
-#     branches: [main]
-#     paths: ["web/public/snapshot.html", ".github/workflows/pages.yml"]
+# Pages 已启用（仓库 Public + Source: GitHub Actions），push 自动发布已恢复。
 on:
+  push:
+    branches: [main]
+    paths: ["web/public/snapshot.html", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
