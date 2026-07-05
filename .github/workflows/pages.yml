@@ -4,11 +4,13 @@
 name: publish-dashboard
 
 # 注意：在启用 Pages（Settings → Pages → Source: GitHub Actions，且仓库为
-# Public 或有付费计划）之前，本工作流只能手动触发，避免在 PR 上产生必然失败的检查。
+# Public 或有付费计划）之前保持纯手动触发，避免每次合并都产生必然失败的检查。
+# 启用 Pages 后，把下面注释的 push 触发恢复即可自动发布：
+# on:
+#   push:
+#     branches: [main]
+#     paths: ["web/public/snapshot.html", ".github/workflows/pages.yml"]
 on:
-  push:
-    branches: [main]
-    paths: ["web/public/snapshot.html", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
