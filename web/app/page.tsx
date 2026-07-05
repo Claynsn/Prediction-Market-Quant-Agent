@@ -73,7 +73,7 @@ export default function Home() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-50">Clay Quant OS</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-50">PM Quant</h1>
         <p className="mt-1 text-sm text-slate-400">
           个人预测市场量化系统 · 想法 → 回测 → （风控确认后）实盘
         </p>
@@ -158,7 +158,7 @@ export default function Home() {
       {tab === "system" && <SystemPanel />}
 
       <footer className="mt-10 text-center text-xs text-slate-600">
-        Clay Quant OS · pm-agent 架构 · 仅供研究，非投资建议。
+        PM Quant · pm-agent 架构 · 仅供研究，非投资建议。
       </footer>
     </main>
   );

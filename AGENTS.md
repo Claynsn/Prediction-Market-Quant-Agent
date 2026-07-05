@@ -1,4 +1,4 @@
-# AGENTS.md — Clay Quant OS / pm-agent
+# AGENTS.md — Prediction Market Quant Agent (PM Quant)
 
 个人预测市场量化系统（单用户）：一句话策略想法 → 回测 → 风控确认后一键实盘
 （Polymarket / predict.fun）。
