@@ -1,4 +1,4 @@
-# Clay Quant OS
+# Prediction Market Quant Agent (PM Quant)
 
 面向 C 端的个人量化系统 SaaS（MVP）。
 
